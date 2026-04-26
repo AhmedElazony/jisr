@@ -1,0 +1,16 @@
+// Enums:
+
+
+// Tables
+Table users {
+  id bigint [primary key]
+  name varchar
+  email varchar [unique]
+  phone varchar [unique]
+  password varchar
+  gender gender [default: "male"]
+  date_of_birth datetime
+  created_at timestamp
+}
+
+
