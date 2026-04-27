@@ -9,7 +9,6 @@ use App\Support\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-
 class LoginController extends Controller
 {
     public function __invoke(LoginRequest $request): JsonResponse
