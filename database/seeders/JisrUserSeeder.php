@@ -11,7 +11,7 @@ class JisrUserSeeder extends Seeder
 {
     public function run(): void
     {
-    
+        // Create users
         $ahmed = User::create([
             'name' => 'Ahmed tamer',
             'jisr_email' => 'ahmed@jisr',
@@ -20,13 +20,6 @@ class JisrUserSeeder extends Seeder
             'password' => Hash::make('password'),
             'phone_verified_at' => now(),
             'email_verified_at' => now(),
-        ]);
-
-        Wallet::create([
-            'user_id' => $ahmed->id,
-            'provider' => 'InstaPay',
-            'currency' => 'EGP',
-            'balance' => 5000.00,
         ]);
 
         $mona = User::create([
@@ -39,13 +32,6 @@ class JisrUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        Wallet::create([
-            'user_id' => $mona->id,
-            'provider' => 'Vodafone Cash',
-            'currency' => 'EGP',
-            'balance' => 3500.00,
-        ]);
-
         $fahad = User::create([
             'name' => 'Fahad Al-Otaibi',
             'jisr_email' => 'fahad@jisr',
@@ -54,13 +40,6 @@ class JisrUserSeeder extends Seeder
             'password' => Hash::make('password'),
             'phone_verified_at' => now(),
             'email_verified_at' => now(),
-        ]);
-
-        Wallet::create([
-            'user_id' => $fahad->id,
-            'provider' => 'STC Pay',
-            'currency' => 'SAR',
-            'balance' => 2000.00,
         ]);
 
         $noura = User::create([
@@ -73,13 +52,6 @@ class JisrUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        Wallet::create([
-            'user_id' => $noura->id,
-            'provider' => 'STC Pay',
-            'currency' => 'SAR',
-            'balance' => 1500.00,
-        ]);
-
         $omar = User::create([
             'name' => 'Omar Al-Mansouri',
             'jisr_email' => 'omar@jisr',
@@ -90,11 +62,48 @@ class JisrUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        Wallet::create([
-            'user_id' => $omar->id,
-            'provider' => 'Fawry',
-            'currency' => 'AED',
-            'balance' => 3000.00,
+        $layla = User::create([
+            'name' => 'Layla Al-Harbi',
+            'jisr_email' => 'layla@jisr',
+            'phone' => '+962791234567',
+            'country' => 'JO',
+            'password' => Hash::make('password'),
+            'phone_verified_at' => now(),
+            'email_verified_at' => now(),
         ]);
+
+        // Get wallets
+        $instaPayWallet = Wallet::where('name', 'InstaPay')->first();
+        $stcPayWallet = Wallet::where('name', 'STC Pay')->first();
+        $careemPayWallet = Wallet::where('name', 'Careem Pay')->first();
+        $zainCashWallet = Wallet::where('name', 'Zain Cash')->first();
+
+        // Attach users to wallets
+        if ($instaPayWallet) {
+            $ahmed->wallets()->attach($instaPayWallet->id, ['balance' => 5000.00]);
+            $mona->wallets()->attach($instaPayWallet->id, ['balance' => 3500.00]);
+        }
+
+        if ($stcPayWallet) {
+            $fahad->wallets()->attach($stcPayWallet->id, ['balance' => 2000.00]);
+            $noura->wallets()->attach($stcPayWallet->id, ['balance' => 1500.00]);
+        }
+
+        if ($careemPayWallet) {
+            $omar->wallets()->attach($careemPayWallet->id, ['balance' => 3000.00]);
+        }
+
+        if ($zainCashWallet) {
+            $layla->wallets()->attach($zainCashWallet->id, ['balance' => 2500.00]);
+        }
+
+        // Some users with multiple wallets
+        if ($instaPayWallet && $zainCashWallet) {
+            $layla->wallets()->attach($instaPayWallet->id, ['balance' => 1000.00]);
+        }
+
+        if ($stcPayWallet && $careemPayWallet) {
+            $omar->wallets()->attach($stcPayWallet->id, ['balance' => 1800.00]);
+        }
     }
 }
