@@ -2,50 +2,92 @@
 
 namespace App\Domains\User\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
+use App\Domains\Wallet\Models\Wallet;
 use App\Support\Traits\HasFilters;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, HasFilters, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
-        'email',
+        'jisr_email',
+        'phone',
+        'country',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function wallets(): BelongsToMany
+    {
+        return $this->belongsToMany(
+           Wallet::class,
+            'wallet_users'
+        )->withPivot('balance')->withTimestamps();
+    }
+
+    public static function generateJisrEmail(string $name): string
+    {
+        $firstName = Str::lower(Str::before(trim($name), ' '));
+        $base = "{$firstName}@jisr";
+        
+        $count = static::where('jisr_email', 'like', "{$firstName}%")->count();
+        
+        return $count > 0 ? "{$firstName}{$count}@jisr" : $base;
+    }
+
+
+    // public static function resolveByIdentifier(string $identifier): ?self
+    // {
+    //     // Phone number (starts with +)
+    //     if (Str::startsWith($identifier, '+')) {
+    //         return static::where('phone', $identifier)->first();
+    //     }
+        
+    //     // Jisr email (ends with @jisr)
+    //     if (Str::endsWith($identifier, '@jisr')) {
+    //         return static::where('jisr_email', $identifier)->first();
+    //     }
+        
+    //     // Regular email (fallback)
+    //     return static::where('email', $identifier)->first();
+    //}
+
+    // ──────────────────────────────────────────────
+    // Helper Methods
+    // ──────────────────────────────────────────────
+
+    // public function isInCountry(string $countryCode): bool
+    // {
+    //     return $this->country === $countryCode;
+    // }
+
+    public function getCurrencyCode(): string
+    {
+        return $this->wallet?->currency ?? 'EGP';
+    }
+
+    public function getBalance(): float
+    {
+        return (float) ($this->wallet?->balance ?? 0);
     }
 }
