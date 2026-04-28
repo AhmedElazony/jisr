@@ -5,6 +5,7 @@ namespace App\Domains\User\Models;
 use App\Domains\Wallet\Models\Wallet;
 use App\Support\Traits\HasFilters;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -36,9 +37,12 @@ class User extends Authenticatable
         ];
     }
 
-    public function wallet()
+    public function wallets(): BelongsToMany
     {
-        return $this->hasOne(Wallet::class);
+        return $this->belongsToMany(
+           Wallet::class,
+            'wallet_users'
+        )->withPivot('balance')->withTimestamps();
     }
 
     public static function generateJisrEmail(string $name): string
