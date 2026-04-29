@@ -31,7 +31,10 @@ class TransactionController extends Controller
 
             return ApiResponse::success(
                 message: 'تم التحويل بنجاح',
-                data: new TransactionResource($transaction)
+                data: [
+					'transaction' => new TransactionResource($transaction),
+					'user_balance' => $request->user()->getBalance(),
+				]
             );
 
         } catch (RuntimeException $e) {
