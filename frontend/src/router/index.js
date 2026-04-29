@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+const LandingView = () => import('../views/LandingView.vue');
 const HomeView = () => import('../views/HomeView.vue');
 const SendView = () => import('../views/SendView.vue');
 const ReviewView = () => import('../views/ReviewView.vue');
@@ -9,7 +10,8 @@ const SuccessView = () => import('../views/SuccessView.vue');
 export default createRouter({
 	history: createWebHistory(),
 	routes: [
-		{ path: '/', name: 'home', component: HomeView },
+		{ path: '/', name: 'landing', component: LandingView },
+		{ path: '/home', name: 'home', component: HomeView },
 		{ path: '/send', name: 'send', component: SendView },
 		{ path: '/review', name: 'review', component: ReviewView },
 		{ path: '/processing', name: 'processing', component: ProcessingView },
