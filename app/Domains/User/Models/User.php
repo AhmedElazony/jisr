@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -40,7 +40,7 @@ class User extends Authenticatable
     public function wallets(): BelongsToMany
     {
         return $this->belongsToMany(
-           Wallet::class,
+            Wallet::class,
             'wallet_users'
         )->withPivot('balance')->withTimestamps();
     }
@@ -49,12 +49,11 @@ class User extends Authenticatable
     {
         $firstName = Str::lower(Str::before(trim($name), ' '));
         $base = "{$firstName}@jisr";
-        
+
         $count = static::where('jisr_email', 'like', "{$firstName}%")->count();
-        
+
         return $count > 0 ? "{$firstName}{$count}@jisr" : $base;
     }
-
 
     // public static function resolveByIdentifier(string $identifier): ?self
     // {
@@ -62,15 +61,15 @@ class User extends Authenticatable
     //     if (Str::startsWith($identifier, '+')) {
     //         return static::where('phone', $identifier)->first();
     //     }
-        
+
     //     // Jisr email (ends with @jisr)
     //     if (Str::endsWith($identifier, '@jisr')) {
     //         return static::where('jisr_email', $identifier)->first();
     //     }
-        
+
     //     // Regular email (fallback)
     //     return static::where('email', $identifier)->first();
-    //}
+    // }
 
     // ──────────────────────────────────────────────
     // Helper Methods
@@ -88,6 +87,6 @@ class User extends Authenticatable
 
     public function getBalance(): float
     {
-        return (float) ($this->wallet?->balance ?? 0);
+        return (float) ($this->wallets?->first()->pivot->balance ?? 0);
     }
 }
