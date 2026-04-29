@@ -7,7 +7,7 @@ import DesktopHeader from './components/DesktopHeader.vue';
 
 const route = useRoute();
 
-const showShell = computed(() => !['processing', 'success'].includes(route.name));
+const showShell = computed(() => !['landing', 'login', 'processing', 'success'].includes(route.name));
 </script>
 
 <template>
