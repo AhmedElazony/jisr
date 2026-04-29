@@ -11,7 +11,7 @@
 							d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
 					</svg>
 				</div>
-				<div class="text-sm font-semibold text-[#111827]">أحمد حسن</div>
+				<div class="text-sm font-semibold text-[#111827]">{{ userName }}</div>
 				<button class="text-[#6B7280] hover:text-[#0CAB9A] transition">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
 						<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -35,8 +35,8 @@
 			<div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
 				<div>
 					<div class="text-xs text-[#6B7280] mb-1">الرصيد المتاح</div>
-					<div class="text-3xl font-bold text-[#111827] tracking-tight">45,230.50</div>
-					<div class="text-xs text-[#6B7280] mt-0.5">ج.م</div>
+					<div class="text-3xl font-bold text-[#111827] tracking-tight">{{ formattedBalance }}</div>
+					<div class="text-xs text-[#6B7280] mt-0.5">{{ currency }}</div>
 				</div>
 				<button class="text-[#6B7280] hover:text-[#0CAB9A] transition mt-1">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,8 +96,8 @@
 						</div>
 						<div>
 							<div class="text-sm opacity-80">الرصيد المتاح</div>
-							<div class="text-4xl font-bold tracking-tight mt-1">134,500.00</div>
-							<div class="text-sm opacity-80 mt-1">EGP</div>
+							<div class="text-4xl font-bold tracking-tight mt-1">{{ formattedBalance }}</div>
+							<div class="text-sm opacity-80 mt-1">{{ currency }}</div>
 						</div>
 					</div>
 					<div class="flex gap-3 mt-6">
@@ -188,9 +188,34 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+
+const currencyByCountry = {
+  EG: 'EGP',
+  SA: 'SAR',
+  AE: 'AED',
+  KW: 'KWD',
+  JO: 'JOD',
+  MA: 'MAD'
+};
+
+const user = computed(() => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+});
+
+const userName = computed(() => user.value.name || '—');
+const walletBalance = computed(() => Number(user.value.wallet_balance ?? 0));
+const formattedBalance = computed(() =>
+  walletBalance.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+);
+const currency = computed(() => currencyByCountry[user.value.country] || 'EGP');
 
 const goToSend = () => router.push({ name: 'send' });
 

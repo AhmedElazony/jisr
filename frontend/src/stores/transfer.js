@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useAuthStore } from './auth';
 
 export const useTransferStore = defineStore('transfer', {
 	state: () => ({
@@ -13,15 +14,17 @@ export const useTransferStore = defineStore('transfer', {
 			phone: '',
 			countryCode: '',
 			wallet: null,
-			country: ''
+			countryName: '',
+			country: '',
+			countryFlag: ''
 		},
 		amount: '',
 		destinationAmount: '',
 		rate: 1,
-		fee: 0,
+		fee: 5,
 		status: 'idle', // idle, processing, success
 		referenceNumber: '',
-		senderCurrency: 'EGP',
+		senderCurrency: useAuthStore().user?.currency || 'EGP',
 		receiverCurrency: ''
 	}),
 
@@ -55,9 +58,11 @@ export const useTransferStore = defineStore('transfer', {
 			this.amount = '';
 			this.destinationAmount = '';
 			this.rate = 1;
-			this.fee = 0;
+			this.fee = 5;
 			this.status = 'idle';
 			this.referenceNumber = '';
+			this.senderCurrency = 'EGP';
+			this.receiverCurrency = '';
 		}
 	}
 });

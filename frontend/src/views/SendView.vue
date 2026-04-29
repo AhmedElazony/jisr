@@ -101,7 +101,7 @@
 									</div>
 								</div>
 
-								<!-- Full name (desktop) -->
+								<!-- Full name -->
 								<div class="block">
 									<label class="block text-xs text-[#6B7280] mb-2">الاسم الكامل للمستلم (كما في
 										الهوية)</label>
@@ -109,7 +109,7 @@
 										class="w-full px-4 py-3.5 rounded-xl border border-[#E5E7EB] bg-white text-sm outline-none focus:border-[#0CAB9A] transition placeholder-[#9CA3AF]" />
 								</div>
 
-								<!-- Purpose (desktop) -->
+								<!-- Purpose -->
 								<div class="block">
 									<label class="block text-xs text-[#6B7280] mb-2">الغرض من التحويل</label>
 									<div class="relative">
@@ -236,12 +236,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTransferStore } from '../stores/transfer';
+import { useAuthStore } from '../stores/auth';
+import api from '../services/api';
 
 const router = useRouter();
 const transferStore = useTransferStore();
+const authStore = useAuthStore();
 
 const phone = ref('');
 const receiverName = ref('');
@@ -249,14 +252,9 @@ const selectedCode = ref('');
 const purpose = ref('');
 const sendAmount = ref('');
 
-const wallets = [
-	{ dialCode: '+966', flag: '🇸🇦', country: 'السعودية', name: 'STC Pay', currency: 'SAR' },
-	{ dialCode: '+971', flag: '🇦🇪', country: 'الإمارات', name: 'Careem Pay', currency: 'AED' },
-	{ dialCode: '+962', flag: '🇯🇴', country: 'الأردن', name: 'Zain Cash', currency: 'JOD' },
-	{ dialCode: '+965', flag: '🇰🇼', country: 'الكويت', name: 'K-Net', currency: 'KWD' },
-	{ dialCode: '+212', flag: '🇲🇦', country: 'المغرب', name: 'CIH', currency: 'MAD' },
-	{ dialCode: '+20', flag: '🇪🇬', country: 'مصر', name: 'InstaPay', currency: 'EGP' }
-];
+const wallets = ref([]);
+const isLoading = ref(true);
+const errorMessage = ref('');
 
 const currencyFlags = {
 	SAR: '🇸🇦',
@@ -267,58 +265,98 @@ const currencyFlags = {
 	MAD: '🇲🇦'
 };
 
-const senderCurrency = ref('SAR');
+const currencyByCountry = {
+	EG: 'EGP',
+	SA: 'SAR',
+	AE: 'AED',
+	KW: 'KWD',
+	JO: 'JOD',
+	MA: 'MAD'
+};
+
+const senderCurrency = computed(() => currencyByCountry[authStore.user?.country] || 'SAR');
 const senderFlag = computed(() => currencyFlags[senderCurrency.value] || '💸');
 
 const detectedWallet = computed(() => {
 	if (!selectedCode.value) return null;
-	return wallets.find(w => w.dialCode === selectedCode.value) || null;
+	return wallets.value.find(w => w.dialCode === selectedCode.value) || null;
 });
 
 const receiverCurrency = computed(() => detectedWallet.value?.currency || '');
 
-const mockRates = {
-	'SAR-EGP': 12.85,
-	'SAR-AED': 0.98,
-	'SAR-KWD': 0.082,
-	'SAR-JOD': 0.19,
-	'SAR-MAD': 2.68
-};
+const rate = ref(0);
+const fee = ref(0);
+const convertedAmount = ref('0.00');
 
-const mockFees = {
-	'SAR-EGP': 0,
-	'SAR-AED': 0,
-	'SAR-KWD': 0,
-	'SAR-JOD': 0,
-	'SAR-MAD': 0
-};
-
-const rate = computed(() => {
-	if (!receiverCurrency.value) return 0;
-	const key = `${senderCurrency.value}-${receiverCurrency.value}`;
-	return mockRates[key] || 0;
-});
-
-const fee = computed(() => {
-	if (!receiverCurrency.value) return 0;
-	const key = `${senderCurrency.value}-${receiverCurrency.value}`;
-	return mockFees[key] ?? 0;
-});
-
-const rateDisplay = computed(() => (rate.value ? rate.value.toFixed(2) : '—'));
+const rateDisplay = computed(() => (rate.value ? rate.value.toFixed(3) : '—'));
 const feeDisplay = computed(() => (fee.value ? `${fee.value} ${senderCurrency.value}` : 'مجاناً'));
-
-const receiverAmount = computed(() => {
-	const amount = parseFloat(sendAmount.value);
-	if (!amount || amount <= 0 || !rate.value) return '0.00';
-	const afterFee = Math.max(amount - fee.value, 0);
-	return (afterFee * rate.value).toFixed(2);
-});
+const receiverAmount = computed(() => convertedAmount.value);
 
 const detectedRecipient = computed(() => phone.value.length > 5 && selectedCode.value);
 
 const isValid = computed(() => {
 	return selectedCode.value && phone.value.length > 5 && parseFloat(sendAmount.value) > 0;
+});
+
+const loadWallets = async () => {
+	isLoading.value = true;
+	errorMessage.value = '';
+	try {
+		const response = await api.get('/wallets');
+		const items = response?.data?.data || [];
+		wallets.value = items.map(item => ({
+			id: item.id,
+			dialCode: item.dial_code,
+			flag: item.flag,
+			country: item.country,
+			name: item.name,
+			currency: item.currency
+		}));
+	} catch (error) {
+		errorMessage.value = 'تعذر تحميل المحافظ المدعومة حالياً.';
+		wallets.value = [];
+	} finally {
+		isLoading.value = false;
+	}
+};
+
+const convertAmount = async () => {
+	if (!sendAmount.value || parseFloat(sendAmount.value) <= 0 || !receiverCurrency.value) {
+		rate.value = 0;
+		convertedAmount.value = '0.00';
+		transferStore.setDestinationAmount('0.00');
+		return;
+	}
+
+	try {
+		const response = await api.post('/currency/convert', {
+			amount: parseFloat(sendAmount.value),
+			from: senderCurrency.value,
+			to: receiverCurrency.value
+		});
+
+		const data = response?.data?.data;
+		if (data) {
+			rate.value = Number(data.exchange_rate || 0);
+			convertedAmount.value = Number(data.converted_amount || 0).toFixed(2);
+			fee.value = 0;
+
+			transferStore.setPricing({
+				rate: rate.value,
+				fee: fee.value,
+				receiverCurrency: receiverCurrency.value
+			});
+			transferStore.setDestinationAmount(convertedAmount.value);
+		}
+	} catch (error) {
+		// Keep last values if conversion fails
+	}
+};
+
+let convertTimer;
+watch([sendAmount, receiverCurrency, senderCurrency], () => {
+	clearTimeout(convertTimer);
+	convertTimer = setTimeout(convertAmount, 400);
 });
 
 const onCountryChange = (code) => {
@@ -328,7 +366,9 @@ const onCountryChange = (code) => {
 		transferStore.setReceiver({
 			countryCode: code,
 			country: wallet.country,
-			wallet
+			countryFlag: wallet.flag,
+			wallet,
+			currency: wallet.currency
 		});
 	}
 };
@@ -343,12 +383,13 @@ const goToReview = () => {
 			phone: selectedCode.value + phone.value,
 			countryCode: selectedCode.value,
 			country: wallet.country,
-			wallet
+			wallet,
+			currency: wallet.currency
 		});
 	}
 
 	transferStore.setAmount(sendAmount.value);
-	transferStore.setDestinationAmount(receiverAmount.value);
+	transferStore.setDestinationAmount(convertedAmount.value);
 	transferStore.setPricing({
 		rate: rate.value,
 		fee: fee.value,
@@ -358,4 +399,6 @@ const goToReview = () => {
 
 	router.push({ name: 'review' });
 };
+
+onMounted(loadWallets);
 </script>
