@@ -14,10 +14,10 @@ class SendTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'receiver_phone'     => ['required', 'string', 'exists:users,phone'],
-            'amount'             => ['required', 'numeric', 'min:0.01'],
+            'receiver_phone' => ['required', 'string', 'exists:users,phone'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
             'receiver_full_name' => ['required', 'string', 'max:255'],
-            'reason'             => ['required', 'string', 'max:500'],
+            'reason' => ['sometimes', 'string', 'max:500'],
         ];
     }
 
@@ -25,7 +25,7 @@ class SendTransactionRequest extends FormRequest
     {
         return [
             'receiver_phone.exists' => 'No user found with this phone number.',
-            'amount.min'            => 'Amount must be greater than 0.',
+            'amount.min' => 'Amount must be greater than 0.',
         ];
     }
 }
