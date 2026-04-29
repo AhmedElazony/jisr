@@ -339,7 +339,7 @@ const convertAmount = async () => {
 		if (data) {
 			rate.value = Number(data.exchange_rate || 0);
 			convertedAmount.value = Number(data.converted_amount || 0).toFixed(2);
-			fee.value = 0;
+			fee.value = 0.005 * parseFloat(sendAmount.value);
 
 			transferStore.setPricing({
 				rate: rate.value,
