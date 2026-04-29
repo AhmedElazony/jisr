@@ -13,7 +13,7 @@ use RuntimeException;
 
 class TransactionService implements TransactionServiceContract
 {
-    private const FEE_PERCENTAGE = 5.0;
+    private const FEE_PERCENTAGE = 0.005;
 
     public function __construct(
         private readonly CurrencyExchangeServiceContract $currencyExchangeService,
@@ -49,7 +49,7 @@ class TransactionService implements TransactionServiceContract
                 throw new RuntimeException('Sender does not have this wallet linked.');
             }
 
-            $fee          = round($amount * (self::FEE_PERCENTAGE / 100), 2);
+            $fee = round($amount * self::FEE_PERCENTAGE, 2);
             $totalDeducted = round($amount + $fee, 2);
 
             if ($senderPivot->pivot->balance < $totalDeducted) {
