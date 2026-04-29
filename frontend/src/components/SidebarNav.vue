@@ -11,7 +11,11 @@ const sideNavItems = [
 	<nav
 		class="hidden md:flex fixed right-0 top-0 h-screen w-60 bg-white border-l border-[#E5E7EB] flex-col py-6 px-4 z-30">
 		<div class="flex items-center justify-center mb-10">
-			<span class="text-2xl font-bold text-[#0CAB9A] tracking-tight">جسر</span>
+			<span class="text-2xl font-bold text-[#0CAB9A] tracking-tight">
+				<RouterLink to="/home">
+					جسر
+				</RouterLink>
+			</span>
 		</div>
 		<div class="flex-1 space-y-1">
 			<button v-for="item in sideNavItems" :key="item.label" :class="[
