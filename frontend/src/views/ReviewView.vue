@@ -51,7 +51,7 @@
                     <!-- Amount Display -->
                     <div class="text-center mb-8">
                         <div class="text-sm-muted mb-2">المبلغ المرسل</div>
-                        <div class="amount-display">{{ receiverCurrency }} {{ destinationAmount }}</div>
+                        <div class="amount-display">{{ senderCurrency }} {{ senderAmount }}</div>
                     </div>
 
                     <!-- Details Card -->
@@ -78,7 +78,7 @@
                             <div
                                 class="flex justify-between pb-3 border-b border-[#E5E7EB] bg-[#F0FFFE] -mx-6 px-6 py-4">
                                 <span class="text-sm-muted">سيستلم</span>
-                                <span class="text-sm font-semibold text-[#0CAB9A]">{{ senderCurrency }} {{ senderAmount }}</span>
+                                <span class="text-sm font-semibold text-[#0CAB9A]">{{ receiverCurrency }} {{ destinationAmount }}</span>
                             </div>
 
                             <div class="flex justify-between pt-2">
