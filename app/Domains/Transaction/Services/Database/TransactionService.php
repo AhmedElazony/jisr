@@ -13,7 +13,7 @@ use RuntimeException;
 
 class TransactionService implements TransactionServiceContract
 {
-    private const FEE_PERCENTAGE = 5.0;
+    private const FEE_PERCENTAGE = 0.005;
 
     public function __construct(
         private readonly CurrencyExchangeServiceContract $currencyExchangeService,
