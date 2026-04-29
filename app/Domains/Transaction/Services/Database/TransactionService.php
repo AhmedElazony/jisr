@@ -34,7 +34,7 @@ class TransactionService implements TransactionServiceContract
                             ->firstOrFail();
 
             if ($receiver->id === $sender->id) {
-                throw new RuntimeException('You cannot send money to yourself.');
+                throw new RuntimeException('لا تسطيع إرسال الأموال إلى نفسك.');
             }
 
             $senderWallet   = $this->walletDetectionService->detectByPhone($sender->phone);
@@ -46,7 +46,7 @@ class TransactionService implements TransactionServiceContract
                                   ->first();
 
             if (! $senderPivot) {
-                throw new RuntimeException('Sender does not have this wallet linked.');
+                throw new RuntimeException('الراسل لا يمتلك هذه المحفظة مرتبطة بحسابه.');
             }
 
             $fee = round($amount * self::FEE_PERCENTAGE, 2);
@@ -66,7 +66,7 @@ class TransactionService implements TransactionServiceContract
                                       ->first();
 
             if (! $receiverPivot) {
-                throw new RuntimeException('Receiver does not have this wallet linked.');
+                throw new RuntimeException('المستلم لا يمتلك هذه المحفظة مرتبطة بحسابه.');
             }
 
             $senderCurrency   = $senderWallet->currency;
