@@ -46,7 +46,7 @@ class TransactionService implements TransactionServiceContract
                                   ->first();
 
             if (! $senderPivot) {
-                throw new RuntimeException('المستلم لا يملك هذا المحفظة مرتبطة بحسابه.');
+                throw new RuntimeException('الراسل لا يملك هذا المحفظة مرتبطة بحسابه.');
             }
 
             $fee = round($amount * self::FEE_PERCENTAGE, 2);
