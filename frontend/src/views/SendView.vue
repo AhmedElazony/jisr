@@ -109,11 +109,11 @@
 										class="w-full px-4 py-3.5 rounded-xl border border-[#E5E7EB] bg-white text-sm outline-none focus:border-[#0CAB9A] transition placeholder-[#9CA3AF]" />
 								</div>
 
-								<!-- Purpose -->
+								<!-- Reason -->
 								<div class="block">
 									<label class="block text-xs text-[#6B7280] mb-2">الغرض من التحويل</label>
 									<div class="relative">
-										<select v-model="purpose"
+										<select v-model="reason"
 											class="w-full px-4 py-3.5 rounded-xl border border-[#E5E7EB] bg-white text-sm outline-none focus:border-[#0CAB9A] transition appearance-none text-[#374151]">
 											<option value="">اختر الغرض...</option>
 											<option value="family">دعم العائلة</option>
@@ -249,7 +249,7 @@ const authStore = useAuthStore();
 const phone = ref('');
 const receiverName = ref('');
 const selectedCode = ref('');
-const purpose = ref('');
+const reason = ref('');
 const sendAmount = ref('');
 
 const wallets = ref([]);
@@ -395,6 +395,7 @@ const goToReview = () => {
 		fee: fee.value,
 		receiverCurrency: receiverCurrency.value
 	});
+	transferStore.setReason(reason.value);
 	transferStore.senderCurrency = senderCurrency.value;
 
 	router.push({ name: 'review' });

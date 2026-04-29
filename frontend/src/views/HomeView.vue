@@ -188,8 +188,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '../services/api';
 
 const router = useRouter();
 
@@ -219,16 +220,64 @@ const currency = computed(() => currencyByCountry[user.value.country] || 'EGP');
 
 const goToSend = () => router.push({ name: 'send' });
 
-const mobileTransactions = [
-	{ id: 1, name: 'Ahmed Hassan', initials: 'AH', time: 'اليوم 10:30 ص', amount: '- 1,500.00 EGP', status: 'مكتمل' },
-	{ id: 2, name: 'Carrefour', initials: 'CR', time: 'أمس', amount: '- 450.00 EGP', status: 'مكتمل' }
-];
+const mobileTransactions = ref([]);
+const desktopTransactions = ref([]);
+const loadingTransactions = ref(true);
 
-const desktopTransactions = [
-	{ id: 1, initials: 'ST', name: 'سارة طارق', sub: 'زين كاش', date: '٢٤ أكتوبر ٢٠٢٣', status: 'مكتملة', amount: '- 1,200 EGP', statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]', dotClass: 'bg-[#0CAB9A]', amountClass: 'text-[#374151]' },
-	{ id: 2, initials: 'MK', name: 'محمود كمال', sub: 'STC Pay', date: '٢٢ أكتوبر ٢٠٢٣', status: 'قيد المعالجة', amount: '- 4,500 EGP', statusClass: 'bg-[#F3F4F6] text-[#6B7280]', dotClass: 'bg-[#9CA3AF]', amountClass: 'text-[#374151]' },
-	{ id: 3, initials: 'IB', name: 'إيداع', sub: 'من بطاقة حصم تنتهى بـ 4421', date: '٢٠ أكتوبر ٢٠٢٣', status: 'مكتملة', amount: '+ 10,000 EGP', statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]', dotClass: 'bg-[#0CAB9A]', amountClass: 'text-[#0CAB9A]' }
-];
+const fetchTransactions = async () => {
+    loadingTransactions.value = true;
+    try {
+        const response = await api.get('/transactions/history');
+        const transactions = response?.data?.data || [];
+        
+        const formatted = transactions.map(tx => ({
+            id: tx.reference_code,
+            name: tx.receiver_full_name,
+            initials: tx.receiver_full_name.split(' ')[0].charAt(0).toUpperCase(),
+            time: formatTime(tx.created_at),
+            amount: `- ${tx.amount} ${tx.currency}`,
+            status: 'مكتمل',
+            sub: tx.reason,
+            date: formatDate(tx.created_at),
+            statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]',
+            dotClass: 'bg-[#0CAB9A]',
+            amountClass: 'text-[#374151]'
+        }));
+        
+        mobileTransactions.value = formatted;
+        desktopTransactions.value = formatted;
+    } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        mobileTransactions.value = [];
+        desktopTransactions.value = [];
+    } finally {
+        loadingTransactions.value = false;
+    }
+};
+
+const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+        return `اليوم ${date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'أمس';
+    } else {
+        return date.toLocaleDateString('ar-EG');
+    }
+};
+
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: '2-digit' });
+};
+
+onMounted(() => {
+    fetchTransactions();
+});
 
 
 </script>

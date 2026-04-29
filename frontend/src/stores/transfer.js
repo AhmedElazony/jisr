@@ -25,7 +25,8 @@ export const useTransferStore = defineStore('transfer', {
 		status: 'idle', // idle, processing, success
 		referenceNumber: '',
 		senderCurrency: useAuthStore().user?.currency || 'EGP',
-		receiverCurrency: ''
+		receiverCurrency: '',
+		reason: ''
 	}),
 
 	actions: {
@@ -51,6 +52,9 @@ export const useTransferStore = defineStore('transfer', {
 		},
 		setReferenceNumber(ref) {
 			this.referenceNumber = ref;
+		},
+		setReason(reason) {
+			this.reason = reason;
 		},
 		reset() {
 			this.sender = { phone: '', countryCode: '', wallet: null, country: '' };

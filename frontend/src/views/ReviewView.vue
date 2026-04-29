@@ -121,6 +121,7 @@ import { useTransferStore } from '../stores/transfer';
 import AppCard from '../components/AppCard.vue';
 import AppButton from '../components/AppButton.vue';
 import { useAuthStore } from '../stores/auth';
+import api from '../services/api';
 
 const router = useRouter();
 const transfer = useTransferStore();
@@ -159,14 +160,42 @@ const senderAmount = computed(() => transfer.amount || '0.00');
 const transferRate = computed(() => transfer.rate ?? 1);
 const transferFee = computed(() => transfer.fee ?? 0);
 
-const confirmTransfer = () => {
-    transfer.setStatus('processing');
-    router.push({ name: 'processing' });
+const confirmTransfer = async () => {
+    try {
+        transfer.setStatus('processing');
+        router.push({ name: 'processing' });
 
-    setTimeout(() => {
-        transfer.setReferenceNumber('JR' + Math.random().toString(36).substr(2, 9).toUpperCase());
-        transfer.setStatus('success');
-        router.push({ name: 'success' });
-    }, 3000);
+        const payload = {
+            receiver_phone: transfer.receiver.phone,
+            amount: parseFloat(transfer.amount),
+            receiver_full_name: transfer.receiver.name,
+            reason: transfer.reason || ''
+        };
+
+        // Call the send transaction API
+        const response = await api.post('/transactions/send', payload);
+        const data = response?.data?.data;
+
+        if (data) {
+            transfer.setReferenceNumber(data.transaction.reference_code);
+            
+            const updatedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            updatedUser.wallet_balance = response?.data.data?.user_balance;
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            auth.setUser(updatedUser);
+
+            transfer.setStatus('success');
+            setTimeout(() => {
+                router.push({ name: 'success' });
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('Transaction failed:', error);
+        transfer.setStatus('error');
+        // Optionally show error message to user
+        setTimeout(() => {
+            router.push({ name: 'review' }); // Go back to review
+        }, 2000);
+    }
 };
 </script>
