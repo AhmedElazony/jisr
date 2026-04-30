@@ -11,7 +11,7 @@
 							d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
 					</svg>
 				</div>
-				<div class="text-sm font-semibold text-[#111827]">أحمد حسن</div>
+				<div class="text-sm font-semibold text-[#111827]">{{ userName }}</div>
 				<button class="text-[#6B7280] hover:text-[#0CAB9A] transition">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
 						<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -35,8 +35,8 @@
 			<div class="bg-white rounded-2xl shadow-sm p-5 flex items-start justify-between">
 				<div>
 					<div class="text-xs text-[#6B7280] mb-1">الرصيد المتاح</div>
-					<div class="text-3xl font-bold text-[#111827] tracking-tight">45,230.50</div>
-					<div class="text-xs text-[#6B7280] mt-0.5">ج.م</div>
+					<div class="text-3xl font-bold text-[#111827] tracking-tight">{{ formattedBalance }}</div>
+					<div class="text-xs text-[#6B7280] mt-0.5">{{ currency }}</div>
 				</div>
 				<button class="text-[#6B7280] hover:text-[#0CAB9A] transition mt-1">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,8 +96,8 @@
 						</div>
 						<div>
 							<div class="text-sm opacity-80">الرصيد المتاح</div>
-							<div class="text-4xl font-bold tracking-tight mt-1">134,500.00</div>
-							<div class="text-sm opacity-80 mt-1">EGP</div>
+							<div class="text-4xl font-bold tracking-tight mt-1">{{ formattedBalance }}</div>
+							<div class="text-sm opacity-80 mt-1">{{ currency }}</div>
 						</div>
 					</div>
 					<div class="flex gap-3 mt-6">
@@ -188,22 +188,96 @@
 </template>
 
 <script setup>
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '../services/api';
 
 const router = useRouter();
 
+const currencyByCountry = {
+  EG: 'EGP',
+  SA: 'SAR',
+  AE: 'AED',
+  KW: 'KWD',
+  JO: 'JOD',
+  MA: 'MAD'
+};
+
+const user = computed(() => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+});
+
+const userName = computed(() => user.value.name || '—');
+const walletBalance = computed(() => Number(user.value.wallet_balance ?? 0));
+const formattedBalance = computed(() =>
+  walletBalance.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+);
+const currency = computed(() => currencyByCountry[user.value.country] || 'EGP');
+
 const goToSend = () => router.push({ name: 'send' });
 
-const mobileTransactions = [
-	{ id: 1, name: 'Ahmed Hassan', initials: 'AH', time: 'اليوم 10:30 ص', amount: '- 1,500.00 EGP', status: 'مكتمل' },
-	{ id: 2, name: 'Carrefour', initials: 'CR', time: 'أمس', amount: '- 450.00 EGP', status: 'مكتمل' }
-];
+const mobileTransactions = ref([]);
+const desktopTransactions = ref([]);
+const loadingTransactions = ref(true);
 
-const desktopTransactions = [
-	{ id: 1, initials: 'ST', name: 'سارة طارق', sub: 'زين كاش', date: '٢٤ أكتوبر ٢٠٢٣', status: 'مكتملة', amount: '- 1,200 EGP', statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]', dotClass: 'bg-[#0CAB9A]', amountClass: 'text-[#374151]' },
-	{ id: 2, initials: 'MK', name: 'محمود كمال', sub: 'STC Pay', date: '٢٢ أكتوبر ٢٠٢٣', status: 'قيد المعالجة', amount: '- 4,500 EGP', statusClass: 'bg-[#F3F4F6] text-[#6B7280]', dotClass: 'bg-[#9CA3AF]', amountClass: 'text-[#374151]' },
-	{ id: 3, initials: 'IB', name: 'إيداع', sub: 'من بطاقة حصم تنتهى بـ 4421', date: '٢٠ أكتوبر ٢٠٢٣', status: 'مكتملة', amount: '+ 10,000 EGP', statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]', dotClass: 'bg-[#0CAB9A]', amountClass: 'text-[#0CAB9A]' }
-];
+const fetchTransactions = async () => {
+    loadingTransactions.value = true;
+    try {
+        const response = await api.get('/transactions/history');
+        const transactions = response?.data?.data || [];
+        
+        const formatted = transactions.map(tx => ({
+            id: tx.reference_code,
+            name: tx.receiver_full_name,
+            initials: tx.receiver_full_name.split(' ')[0].charAt(0).toUpperCase(),
+            time: formatTime(tx.created_at),
+            amount: `- ${tx.amount} ${tx.currency}`,
+            status: 'مكتمل',
+            sub: tx.reason,
+            date: formatDate(tx.created_at),
+            statusClass: 'bg-[#E8F7F3] text-[#0CAB9A]',
+            dotClass: 'bg-[#0CAB9A]',
+            amountClass: 'text-[#374151]'
+        }));
+        
+        mobileTransactions.value = formatted;
+        desktopTransactions.value = formatted;
+    } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        mobileTransactions.value = [];
+        desktopTransactions.value = [];
+    } finally {
+        loadingTransactions.value = false;
+    }
+};
+
+const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+        return `اليوم ${date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'أمس';
+    } else {
+        return date.toLocaleDateString('ar-EG');
+    }
+};
+
+const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: '2-digit' });
+};
+
+onMounted(() => {
+    fetchTransactions();
+});
 
 
 </script>

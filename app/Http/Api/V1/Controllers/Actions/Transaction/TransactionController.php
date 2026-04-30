@@ -22,21 +22,25 @@ class TransactionController extends Controller
     {
         try {
             $transaction = $this->transactionService->send(
-                sender:           $request->user(),
-                receiverPhone:    $request->validated('receiver_phone'),
-                amount:           (float) $request->validated('amount'),
+                sender: $request->user(),
+                receiverPhone: $request->validated('receiver_phone'),
+                amount: (float) $request->validated('amount'),
                 receiverFullName: $request->validated('receiver_full_name'),
-                reason:           $request->validated('reason'),
+                reason: $request->validated('reason'),
             );
 
             return ApiResponse::success(
                 message: 'تم التحويل بنجاح',
-                data: new TransactionResource($transaction)
+                data: [
+                    'transaction' => new TransactionResource($transaction),
+                    'user_balance' => $request->user()->getBalance(),
+                ]
             );
 
         } catch (RuntimeException $e) {
             return ApiResponse::error(
                 message: $e->getMessage(),
+                status: $e->getCode()
             );
         }
     }
