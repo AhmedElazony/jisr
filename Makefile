@@ -100,3 +100,128 @@ artisan:
 
 composer:
 	@docker compose run --rm -u "$(UID):$(GID)" app composer $(filter-out $@,$(MAKECMDGOALS))
+
+
+### DEVELOPMENT ###
+dev-up:
+	@echo "$(BLUE)Starting development environment...$(NC)"
+	@docker compose -f $(DEV_COMPOSE) up -d
+	@echo "$(GREEN)Development environment started!$(NC)"
+
+dev-down:
+	@echo "$(YELLOW)Stopping development environment...$(NC)"
+	@docker compose -f $(DEV_COMPOSE) down
+	@echo "$(GREEN)Development environment stopped!$(NC)"
+
+dev-build:
+	@echo "$(BLUE)Building development environment...$(NC)"
+	@docker compose -f $(DEV_COMPOSE) build --no-cache
+	@echo "$(GREEN)Development environment built!$(NC)"
+
+dev-restart:
+	@echo "$(YELLOW)Restarting development environment...$(NC)"
+	@docker compose -f $(DEV_COMPOSE) restart
+	@echo "$(GREEN)Development environment restarted!$(NC)"
+
+dev-logs:
+	@docker compose -f $(DEV_COMPOSE) logs -f
+
+dev-ps:
+	@docker compose -f $(DEV_COMPOSE) ps
+
+dev-clean: ## Remove development containers and volumes (WARNING: deletes data)
+	@echo "$(RED)WARNING: This will delete all data!$(NC)"
+	@read -p "Are you sure? [y/N] " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		docker compose -f $(DEV_COMPOSE) down -v; \
+		echo "$(GREEN)Development environment cleaned!$(NC)"; \
+	fi
+
+dev-fix-permissions:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app sh -c "chmod +x /var/www/html/docker/php/fix-permissions.sh && /var/www/html/docker/php/fix-permissions.sh"
+
+dev-composer-install:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app composer install \
+		&& echo "$(GREEN)Composer dependencies installed!$(NC)" \
+		&& docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan key:generate \
+		&& echo "$(GREEN)Application key generated!$(NC)"
+
+dev-npm-install:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" frontend npm install
+
+dev-npm-build:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" frontend npm run build
+
+dev-copy-frontend:
+	@echo "$(GREEN)Copying frontend build to public/app...$(NC)"
+	@rm -rf public/app
+	@cp -r frontend/dist public/app
+	@echo "$(GREEN)Frontend build copied!$(NC)"
+
+dev-artisan:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan $(filter-out $@,$(MAKECMDGOALS))
+
+dev-artisan-migrate:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan migrate --force
+
+dev-artisan-seed:
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan db:seed --force
+
+dev-setup:
+	@echo "$(BLUE)Setting up development environment...$(NC)"
+	@if [ ! -f .env ]; then cp .env.example .env; echo "$(GREEN).env file created$(NC)"; fi
+	@if [ ! -f frontend/.env.development ]; then cp frontend/.env.example frontend/.env.development; echo "$(GREEN)frontend/.env.development created$(NC)"; fi
+	@$(MAKE) dev-build
+	@$(MAKE) dev-up
+	@echo "$(YELLOW)Waiting for containers to be ready...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)Running composer install...$(NC)"
+	@$(MAKE) dev-composer-install
+	@echo "$(GREEN)Running migrations...$(NC)"
+	@$(MAKE) dev-artisan-migrate
+	@$(MAKE) dev-artisan-seed
+	@$(MAKE) dev-npm-install
+	@$(MAKE) dev-npm-build
+	@$(MAKE) dev-copy-frontend
+	@$(MAKE) dev-fix-permissions
+	@echo "$(GREEN)Permissions fixed!$(NC)"
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan optimize
+	@echo "$(GREEN)Development environment setup complete!$(NC)"
+	@echo "$(BLUE)You can access the app at http://$(curl -s ifconfig.me)$(NC)"
+
+dev-deploy:
+	@echo "$(BLUE)Deploying development environment...$(NC)"
+	@git pull origin develop
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan down || true
+	@$(MAKE) dev-build
+	@$(MAKE) dev-up
+	@echo "$(YELLOW)Waiting for containers to be ready...$(NC)"
+	@sleep 10
+	@echo "$(GREEN)Running composer install...$(NC)"
+	@$(MAKE) dev-composer-install
+	@echo "$(GREEN)Running migrations...$(NC)"
+	@$(MAKE) dev-artisan-migrate
+	@$(MAKE) dev-npm-install
+	@$(MAKE) dev-npm-build
+	@$(MAKE) dev-copy-frontend
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan optimize:clear
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan optimize
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan up
+	@echo "$(GREEN)Development environment deployed!$(NC)"
+
+dev-deploy-fast:
+	@echo "$(BLUE)Deploying development environment (fast)...$(NC)"
+	@git pull origin develop
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan down || true
+	@echo "$(GREEN)Running composer install...$(NC)"
+	@$(MAKE) dev-composer-install
+	@echo "$(GREEN)Running migrations...$(NC)"
+	@$(MAKE) dev-artisan-migrate
+	@$(MAKE) dev-npm-install
+	@$(MAKE) dev-npm-build
+	@$(MAKE) dev-copy-frontend
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan optimize:clear
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan optimize
+	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan up
+	@echo "$(GREEN)Development environment deployed!$(NC)"
