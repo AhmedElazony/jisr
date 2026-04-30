@@ -9,7 +9,7 @@
 				</svg>
 			</div>
 			<div>
-				<div class="font-semibold text-sm text-[#111827]">أحمد حسن</div>
+				<div class="font-semibold text-sm text-[#111827]">{{ userName }}</div>
 				<div class="text-xs text-[#6B7280]">أهلًا بعودتك</div>
 			</div>
 			<button class="text-[#6B7280] hover:text-[#0CAB9A] transition">
@@ -26,3 +26,16 @@
 		</div>
 	</header>
 </template>
+<script setup>
+import { computed } from 'vue';
+
+const user = computed(() => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+});
+
+const userName = computed(() => user.value.name || '—');
+</script>
