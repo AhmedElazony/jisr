@@ -12,21 +12,9 @@
 					</svg>
 				</div>
 				<div class="text-sm font-semibold text-[#111827]">{{ userName }}</div>
-				<button class="text-[#6B7280] hover:text-[#0CAB9A] transition">
-					<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-						<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-						<path d="M13.73 21a2 2 0 0 1-3.46 0" />
-					</svg>
-				</button>
 			</div>
 			<div class="text-xl font-bold text-[#0CAB9A] tracking-tight">جسر</div>
-			<button class="w-9 h-9 flex items-center justify-center text-[#6B7280]">
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-					<line x1="3" y1="6" x2="21" y2="6" />
-					<line x1="3" y1="12" x2="21" y2="12" />
-					<line x1="3" y1="18" x2="21" y2="18" />
-				</svg>
-			</button>
+			<NotificationBell variant="mobile" />
 		</header>
 
 		<!-- Mobile Content -->
@@ -190,6 +178,7 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import NotificationBell from '../components/NotificationBell.vue';
 import api from '../services/api';
 
 const router = useRouter();
