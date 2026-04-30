@@ -23,6 +23,10 @@ class AppServiceProvider extends ServiceProvider
             \App\Domains\Wallet\Services\Contracts\CurrencyExchangeService::class,
             \App\Domains\Wallet\Services\Database\CurrencyExchangeService::class
         );
+        $this->app->bind(
+            \App\Domains\Transaction\Services\Contracts\TransactionService::class,
+            \App\Domains\Transaction\Services\Database\TransactionService::class
+        );
     }
 
     /**

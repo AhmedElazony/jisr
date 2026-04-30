@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router';
 import BottomNav from './components/BottomNav.vue';
 import SidebarNav from './components/SidebarNav.vue';
 import DesktopHeader from './components/DesktopHeader.vue';
+import { useTransactionBroadcasts } from './composables/useTransactionBroadcasts';
 
 const route = useRoute();
+useTransactionBroadcasts();
 
-const showShell = computed(() => !['processing', 'success'].includes(route.name));
+const showShell = computed(() => !['landing', 'login', 'processing', 'success'].includes(route.name));
 </script>
 
 <template>
@@ -15,7 +17,7 @@ const showShell = computed(() => !['processing', 'success'].includes(route.name)
 		<SidebarNav v-if="showShell" />
 		<DesktopHeader v-if="showShell" />
 
-		<main :class="showShell ? 'md:ml-60 md:pt-[73px]' : ''">
+		<main :class="showShell ? 'lg:ml-60 md:pt-[73px]' : ''">
 			<RouterView />
 		</main>
 

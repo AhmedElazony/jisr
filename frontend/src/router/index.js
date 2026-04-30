@@ -1,18 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
+const LoginView = () => import('../views/LoginView.vue');
+const LandingView = () => import('../views/LandingView.vue');
 const HomeView = () => import('../views/HomeView.vue');
 const SendView = () => import('../views/SendView.vue');
 const ReviewView = () => import('../views/ReviewView.vue');
 const ProcessingView = () => import('../views/ProcessingView.vue');
 const SuccessView = () => import('../views/SuccessView.vue');
+const TransactionDetailsView = () => import('../views/TransactionDetailsView.vue');
 
 export default createRouter({
 	history: createWebHistory(),
 	routes: [
-		{ path: '/', name: 'home', component: HomeView },
+		{ path: '/', name: 'landing', component: LandingView },
+		{ path: '/login', name: 'login', component: LoginView},
+		{ path: '/home', name: 'home', component: HomeView },
 		{ path: '/send', name: 'send', component: SendView },
 		{ path: '/review', name: 'review', component: ReviewView },
 		{ path: '/processing', name: 'processing', component: ProcessingView },
-		{ path: '/success', name: 'success', component: SuccessView }
+		{ path: '/success', name: 'success', component: SuccessView },
+		{ path: '/transactions/:id', name: 'transaction-details', component: TransactionDetailsView }
 	]
 });

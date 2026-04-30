@@ -16,6 +16,8 @@ class LoginController extends Controller
 
         $token = $user->createToken('jisr-api')->plainTextToken;
 
+		$balance = $user->getBalance();
+
         return ApiResponse::success(
             message: __('تم التسجيل بنجاح'),
             data: [
@@ -25,6 +27,7 @@ class LoginController extends Controller
                     'jisr_email' => $user->jisr_email,
                     'phone' => $user->phone,
                     'country' => $user->country,
+					'wallet_balance' => $balance,
                 ],
                 'token' => $token,
             ]

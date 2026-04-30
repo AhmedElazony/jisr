@@ -35,24 +35,24 @@
 					<!-- Transfer Visualization -->
 					<div class="flex items-center justify-between mb-8 px-4">
 						<div class="text-center">
-							<div class="w-12 h-12 rounded-full bg-[#E5E7EB] mx-auto mb-2"></div>
-							<div class="text-xs font-semibold">{{ transfer.sender.country }}</div>
+							<div class="w-12 h-12 rounded-full bg-[#E5E7EB] mx-auto mb-2">{{ senderCountryFlag }}</div>
+							<div class="text-xs font-semibold">{{ senderCountry }}</div>
 						</div>
 						<div class="flex-1 text-center px-4">
 							<div class="text-2xl">💸</div>
 							<div class="text-xs text-[#6B7280] mt-2">تحويل</div>
 						</div>
 						<div class="text-center">
-							<div class="w-12 h-12 rounded-full bg-[#E5E7EB] mx-auto mb-2"></div>
-							<div class="text-xs font-semibold">{{ transfer.receiver.country }}</div>
+							<div class="w-12 h-12 rounded-full bg-[#E5E7EB] mx-auto mb-2">{{ receiverCountryFlag }}
+							</div>
+							<div class="text-xs font-semibold">{{ receiverCountry }}</div>
 						</div>
 					</div>
 
 					<!-- Amount Display -->
 					<div class="text-center mb-8">
 						<div class="text-sm-muted mb-2">المبلغ المرسل</div>
-						<div class="amount-display">{{ transfer.receiverCurrency }} {{ transfer.destinationAmount }}
-						</div>
+						<div class="amount-display">{{ senderCurrency }} {{ senderAmount }}</div>
 					</div>
 
 					<!-- Details Card -->
@@ -60,48 +60,58 @@
 						<div class="space-y-4">
 							<div class="flex justify-between pb-3 border-b border-[#E5E7EB]">
 								<span class="text-sm-muted">المستقبل</span>
-								<span class="font-semibold text-sm">{{ transfer.receiver.name }}</span>
+								<span class="font-semibold text-sm">{{ receiverName }}</span>
 							</div>
 
 							<div class="flex justify-between pb-3 border-b border-[#E5E7EB]">
 								<span class="text-sm-muted">المحفظة</span>
-								<span v-if="transfer.receiver.wallet" class="text-sm font-semibold">
-									{{ transfer.receiver.wallet.name }}
+								<span v-if="receiverWalletName" class="text-sm font-semibold">
+									{{ receiverWalletName }}
 								</span>
 							</div>
 
 							<div class="flex justify-between pb-3 border-b border-[#E5E7EB]">
 								<span class="text-sm-muted">سعر الصرف</span>
-								<span class="text-sm font-semibold">1 {{ transfer.receiverCurrency }} = {{ transfer.rate
-									}}
-									{{
-										transfer.senderCurrency }}</span>
+								<span class="text-sm font-semibold">
+									1 {{ receiverCurrency }} = {{ transferRate }} {{ senderCurrency }}
+								</span>
 							</div>
 
 							<div
 								class="flex justify-between pb-3 border-b border-[#E5E7EB] bg-[#F0FFFE] -mx-6 px-6 py-4">
 								<span class="text-sm-muted">سيستلم</span>
-								<span class="text-sm font-semibold text-[#0CAB9A]">{{ transfer.senderCurrency }} {{
-									transfer.amount
-								}}</span>
+								<span class="text-sm font-semibold text-[#0CAB9A]">
+									{{ receiverCurrency }} {{ destinationAmount }}
+								</span>
 							</div>
 
 							<div class="flex justify-between pt-2">
 								<span class="text-sm-muted">رسوم التحويل</span>
-								<span class="text-sm font-semibold">{{ transfer.senderCurrency }} {{ transfer.fee
-									}}</span>
+								<span class="text-sm font-semibold">{{ senderCurrency }} {{ transferFee }}</span>
 							</div>
 						</div>
 					</AppCard>
 
 					<!-- Info Note -->
 					<div class="p-4 bg-[#E0F7F4] text-[#0A8F7F] rounded-lg text-sm mb-6">
-						سيصل المبلغ إلى محفظة {{ transfer.receiver.wallet?.name }} عادة خلال دقائق معدودة
+						سيصل المبلغ إلى محفظة {{ receiverWalletName }} عادة خلال دقائق معدودة
+					</div>
+
+					<!-- API Errors -->
+					<div v-if="errorMessages.length"
+						class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+						<div class="font-semibold mb-2">تعذر تنفيذ التحويل</div>
+						<ul class="space-y-1 pr-5 list-disc">
+							<li v-for="(message, index) in errorMessages" :key="index">
+								{{ message }}
+							</li>
+						</ul>
 					</div>
 
 					<!-- Confirm Button (desktop) -->
 					<div class="hidden md:block mt-8">
-						<AppButton text="تأكيد التحويل" @click="confirmTransfer" />
+						<AppButton :text="isSubmitting ? 'جارٍ التنفيذ...' : 'تأكيد التحويل'" :disabled="isSubmitting"
+							@click="confirmTransfer" />
 					</div>
 				</div>
 			</div>
@@ -109,35 +119,163 @@
 
 		<!-- Mobile Confirm Button -->
 		<div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] px-4 py-4 z-50">
-			<button @click="confirmTransfer" class="btn-gradient">
+			<button @click="confirmTransfer" :disabled="isSubmitting"
+				class="btn-gradient disabled:opacity-40 disabled:cursor-not-allowed">
 				<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
 					<polyline points="15 18 9 12 15 6" />
 				</svg>
-				تأكيد التحويل
+				{{ isSubmitting ? 'جارٍ التنفيذ...' : 'تأكيد التحويل' }}
 			</button>
 		</div>
 	</div>
-
 </template>
 
 <script setup>
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTransferStore } from '../stores/transfer';
+import { useAuthStore } from '../stores/auth';
 import AppCard from '../components/AppCard.vue';
 import AppButton from '../components/AppButton.vue';
+import api from '../services/api';
 
 const router = useRouter();
 const transfer = useTransferStore();
+const auth = useAuthStore();
 
-const confirmTransfer = () => {
+const isSubmitting = ref(false);
+const errorMessages = ref([]);
+
+const countryNames = {
+	SA: 'السعودية',
+	EG: 'مصر',
+	AE: 'الإمارات',
+	KW: 'الكويت',
+	JO: 'الأردن',
+	MA: 'المغرب'
+};
+
+const countryFlags = {
+	SA: '🇸🇦',
+	EG: '🇪🇬',
+	AE: '🇦🇪',
+	KW: '🇰🇼',
+	JO: '🇯🇴',
+	MA: '🇲🇦'
+};
+
+const senderCountry = computed(() => countryNames[auth.user?.country] || '—');
+const senderCountryFlag = computed(() => countryFlags[auth.user?.country] || '');
+const receiverCountry = computed(() => transfer.receiver?.country || '—');
+const receiverCountryFlag = computed(() => transfer.receiver?.countryFlag || '');
+const receiverName = computed(() => transfer.receiver?.name || '—');
+const receiverWalletName = computed(() => transfer.receiver?.wallet?.name || '—');
+
+const senderCurrency = computed(() => transfer.senderCurrency || 'EGP');
+const receiverCurrency = computed(() => transfer.receiverCurrency || '—');
+const destinationAmount = computed(() => transfer.destinationAmount || '0.00');
+const senderAmount = computed(() => transfer.amount || '0.00');
+
+const transferRate = computed(() => transfer.rate ?? 1);
+const transferFee = computed(() => transfer.fee ?? 0);
+
+const extractApiMessages = (error) => {
+	const status = error?.response?.status;
+	const responseData = error?.response?.data;
+
+	if (status === 422 && responseData?.errors && typeof responseData.errors === 'object') {
+		const messages = [];
+
+		Object.values(responseData.errors).forEach((value) => {
+			if (Array.isArray(value)) {
+				value.forEach((message) => {
+					if (message) messages.push(message);
+				});
+			} else if (value) {
+				messages.push(String(value));
+			}
+		});
+
+		if (messages.length) {
+			return messages;
+		}
+	}
+
+	if (status === 400 && responseData?.message) {
+		return [responseData.message];
+	}
+
+	if (responseData?.message) {
+		return [responseData.message];
+	}
+
+	return ['حدث خطأ أثناء تنفيذ التحويل. يرجى المحاولة مرة أخرى.'];
+};
+
+const persistUserBalance = (balance) => {
+	const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+	const updatedUser = {
+		...storedUser,
+		wallet_balance: Number(balance ?? storedUser.wallet_balance ?? 0)
+	};
+
+	localStorage.setItem('user', JSON.stringify(updatedUser));
+	auth.setUser(updatedUser);
+};
+
+const routeBackToSendForm = (messages) => {
+	router.replace({
+		name: 'send',
+		query: {
+			transfer_error: messages.join(' | ')
+		}
+	});
+};
+
+const confirmTransfer = async () => {
+	if (isSubmitting.value) return;
+
+	isSubmitting.value = true;
+	errorMessages.value = [];
 	transfer.setStatus('processing');
+
 	router.push({ name: 'processing' });
 
-	// Simulate processing delay
-	setTimeout(() => {
-		transfer.setReferenceNumber('JR' + Math.random().toString(36).substr(2, 9).toUpperCase());
+	try {
+		const payload = {
+			receiver_phone: transfer.receiver?.phone || '',
+			amount: Number.parseFloat(transfer.amount || '0'),
+			receiver_full_name: transfer.receiver?.name || '',
+			reason: transfer.reason || ''
+		};
+
+		const response = await api.post('/transactions/send', payload);
+		const data = response?.data?.data || {};
+		const transaction = data.transaction || {};
+
+		if (transaction.reference_code) {
+			transfer.setReferenceNumber(transaction.reference_code);
+		}
+
+		if (data.user_balance !== undefined && data.user_balance !== null) {
+			persistUserBalance(data.user_balance);
+		}
+
 		transfer.setStatus('success');
-		router.push({ name: 'success' });
-	}, 3000);
+
+		setTimeout(() => {
+			router.push({ name: 'success' });
+		}, 900);
+	} catch (error) {
+		const messages = extractApiMessages(error);
+		errorMessages.value = messages;
+		transfer.setStatus('error');
+
+		setTimeout(() => {
+			routeBackToSendForm(messages);
+		}, 1200);
+	} finally {
+		isSubmitting.value = false;
+	}
 };
 </script>
