@@ -18,8 +18,13 @@
 		</header>
 
 		<div class="flex flex-1 md:mr-0">
+
 			<!-- Main Content -->
 			<main class="flex-1 md:mr-60 flex flex-col">
+				<div v-if="transferError"
+					class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+					{{ transferError }}
+				</div>
 				<!-- Page content wrapper -->
 				<div class="flex-1 px-4 md:px-0 md:flex md:items-start md:justify-center md:pt-10">
 					<div class="w-full md:max-w-2xl md:bg-white md:rounded-2xl md:shadow-sm md:overflow-hidden">
@@ -237,12 +242,13 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useTransferStore } from '../stores/transfer';
 import { useAuthStore } from '../stores/auth';
 import api from '../services/api';
 
 const router = useRouter();
+const route = useRoute();
 const transferStore = useTransferStore();
 const authStore = useAuthStore();
 
@@ -400,6 +406,11 @@ const goToReview = () => {
 
 	router.push({ name: 'review' });
 };
+
+const transferError = computed(() => {
+	const value = route.query.transfer_error;
+	return typeof value === 'string' ? value : '';
+});
 
 onMounted(loadWallets);
 </script>
