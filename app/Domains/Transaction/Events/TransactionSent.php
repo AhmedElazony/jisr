@@ -14,7 +14,9 @@ class TransactionSent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        protected Transaction $transaction
+        protected Transaction $transaction,
+		protected string $senderEmail,
+		protected string $senderName,
     ) {}
 
     public function broadcastOn(): array
@@ -35,6 +37,8 @@ class TransactionSent implements ShouldBroadcastNow
             'id' => $this->transaction->id,
             'amount' => $this->transaction->amount,
             'sender_id' => $this->transaction->sender_id,
+            'sender_name' => $this->senderName,
+            'sender_email' => $this->senderEmail,
             'receiver_id' => $this->transaction->receiver_id,
             'created_at' => $this->transaction->created_at->toDateTimeString(),
         ];
