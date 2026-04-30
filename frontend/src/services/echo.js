@@ -14,7 +14,7 @@ window.Echo = new Echo({
 	authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
 	auth: {
 		headers: {
-			Authorization: `Bearer ${localStorage.getItem('token') || useAuthStore().token}`,
+			Authorization: `Bearer ${localStorage.getItem('token')}`,
 			Accept: 'application/json',
 			'X-Requested-With': 'XMLHttpRequest'
 		}
