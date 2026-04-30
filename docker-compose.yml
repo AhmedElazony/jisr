@@ -13,6 +13,20 @@ services:
       - postgres
       - redis
 
+  reverb:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    container_name: reverb
+    working_dir: /var/www/html
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./:/var/www/html
+    command: 'php artisan reverb:serve --host=0.0.0.0 --port=8080'
+    depends_on:
+      - app
+
   nginx:
     image: nginx:alpine
     container_name: nginx

@@ -2,6 +2,7 @@
 
 namespace App\Domains\Transaction\Services\Database;
 
+use App\Domains\Transaction\Events\TransactionSent;
 use App\Domains\Transaction\Models\Transaction;
 use App\Domains\Transaction\Services\Contracts\TransactionService as TransactionServiceContract;
 use App\Domains\User\Models\User;
@@ -92,7 +93,7 @@ class TransactionService implements TransactionServiceContract
                 'balance' => $receiverPivot->pivot->balance + $receiverAmount,
             ]);
 
-            return Transaction::create([
+            $transaction = Transaction::create([
                 'sender_id' => $sender->id,
                 'receiver_id' => $receiver->id,
                 'receiver_full_name' => $receiverFullName,
@@ -105,6 +106,12 @@ class TransactionService implements TransactionServiceContract
                 'transaction_fee' => $fee,
                 'status' => 'completed',
             ]);
+
+			broadcast(
+				new TransactionSent($transaction)
+			)->toOthers();
+
+			return $transaction;
         });
     }
 
