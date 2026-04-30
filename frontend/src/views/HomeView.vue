@@ -224,7 +224,7 @@ const fetchTransactions = async () => {
             name: tx.receiver_full_name,
             initials: tx.receiver_full_name.split(' ')[0].charAt(0).toUpperCase(),
             time: formatTime(tx.created_at),
-            amount: `- ${tx.amount} ${tx.currency}`,
+            amount: tx.type == 'received' ? `+ ${tx.amount} ${tx.currency}` : `-${tx.amount} ${tx.currency}`,
             status: 'مكتمل',
             sub: tx.reason,
             date: formatDate(tx.created_at),

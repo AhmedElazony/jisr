@@ -4,6 +4,20 @@ import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://localhost',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/broadcasting': {
+        target: 'https://localhost',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   plugins: [
     vue(),
     tailwindcss(),

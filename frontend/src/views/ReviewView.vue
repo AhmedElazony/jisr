@@ -265,7 +265,7 @@ const confirmTransfer = async () => {
 
 		setTimeout(() => {
 			router.push({ name: 'success' });
-		}, 3000);
+		}, 900);
 	} catch (error) {
 		const messages = extractApiMessages(error);
 		errorMessages.value = messages;
