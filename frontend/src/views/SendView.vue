@@ -66,33 +66,34 @@
 											</option>
 										</select>
 										<div class="w-px bg-[#E5E7EB] my-3"></div>
-										<input v-model="phone" type="tel" placeholder="100 123 4567"
+										<input v-model="phone" @input="onPhoneInput" @paste.prevent="onPhonePaste"
+											type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="100 123 4567"
 											class="flex-1 min-w-0 w-full px-3 py-3.5 text-sm bg-transparent border-none outline-none placeholder-[#9CA3AF]" />
 									</div>
-									<!-- Detected wallet badge -->
-									<div v-if="detectedWallet"
-										class="mt-2 flex items-center gap-2 px-3 py-2 bg-[#E8F7F3] rounded-lg">
-										<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0CAB9A"
-											stroke-width="2">
-											<rect x="1" y="4" width="22" height="16" rx="2" />
-											<line x1="1" y1="10" x2="23" y2="10" />
-										</svg>
-										<span class="text-xs text-[#0CAB9A] font-medium">تم التعرف على المحفظة: {{
-											detectedWallet.name }}</span>
-									</div>
-								</div>
 
-								<!-- Detected recipient card -->
-								<div v-if="detectedRecipient"
-									class="bg-[#F0FFFE] rounded-xl border border-[#B2EBE7] p-4">
-									<div class="text-xs text-[#6B7280] mb-2">المستلم المكتشف</div>
-									<div class="flex items-center justify-between">
+									<!-- User detection states -->
+									<!-- Loading -->
+									<div v-if="userLookupLoading"
+										class="mt-2 flex items-center gap-2 px-3 py-2 bg-[#E8F7F3] rounded-lg text-sm text-[#0CAB9A]">
+										<svg class="animate-spin" viewBox="0 0 24 24" width="14" height="14" fill="none"
+											stroke="#0CAB9A" stroke-width="2">
+											<circle cx="12" cy="12" r="10" stroke-opacity="0.2" />
+											<path d="M22 12a10 10 0 0 1-10 10" />
+										</svg>
+										<span>جارٍ التحقق من المستخدم...</span>
+									</div>
+
+									<!-- Found -->
+									<div v-else-if="userFound"
+										class="mt-2 bg-[#F0FFFE] rounded-xl border border-[#B2EBE7] p-4 flex items-center justify-between">
 										<div class="flex items-center gap-3">
 											<div
 												class="w-9 h-9 rounded-full bg-[#0CAB9A] flex items-center justify-center text-white font-bold text-sm">
-												A</div>
+												{{ userInitials }}
+											</div>
 											<div>
-												<div class="font-semibold text-sm text-[#111827]">Ali</div>
+												<div class="font-semibold text-sm text-[#111827]">{{ userLookup.name }}
+												</div>
 												<div class="text-xs text-[#6B7280]">{{ selectedCode }} {{ phone }}</div>
 											</div>
 										</div>
@@ -104,13 +105,33 @@
 											موثق
 										</div>
 									</div>
+
+									<!-- Not found -->
+									<div v-else-if="selectedCode && phone.length > 5 && userLookupError"
+										class="mt-2 bg-[#FFF1F2] rounded-xl border border-red-200 p-4 flex items-center justify-between text-sm text-red-700">
+										<div>
+											<div class="font-semibold">لا يوجد مستخدم بهذا الرقم</div>
+											<div class="text-xs text-red-600 mt-1">{{ selectedCode }} {{ phone }}</div>
+										</div>
+										<div
+											class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-xs font-medium text-red-600">
+											<svg viewBox="0 0 24 24" width="14" height="14" fill="none"
+												stroke="currentColor" stroke-width="2">
+												<circle cx="12" cy="12" r="10" />
+												<line x1="12" y1="8" x2="12" y2="12" />
+												<circle cx="12" cy="16" r="1" />
+											</svg>
+											غير موجود
+										</div>
+									</div>
 								</div>
 
 								<!-- Full name -->
 								<div class="block">
 									<label class="block text-xs text-[#6B7280] mb-2">الاسم الكامل للمستلم (كما في
 										الهوية)</label>
-									<input v-model="receiverName" type="text" placeholder="الاسم الرباعي"
+									<input v-model="receiverName" :disabled="userFound"
+										:placeholder="userFound ? userLookup.name : 'الاسم الرباعي'" type="text"
 										class="w-full px-4 py-3.5 rounded-xl border border-[#E5E7EB] bg-white text-sm outline-none focus:border-[#0CAB9A] transition placeholder-[#9CA3AF]" />
 								</div>
 
@@ -298,10 +319,23 @@ const rateDisplay = computed(() => (rate.value ? rate.value.toFixed(3) : '—'))
 const feeDisplay = computed(() => (fee.value ? `${fee.value} ${senderCurrency.value}` : 'مجاناً'));
 const receiverAmount = computed(() => convertedAmount.value);
 
+const userLookup = ref(null);
+const userLookupLoading = ref(false);
+const userLookupError = ref('');
+const userSearchTimer = ref(null);
+
+const userFound = computed(() => !!userLookup.value && typeof userLookup.value === 'object' && !!userLookup.value.name);
+const userInitials = computed(() => {
+	if (!userLookup.value?.name) return '؟';
+	const parts = userLookup.value.name.split(' ');
+	return (parts[0]?.charAt(0) || '').toUpperCase();
+});
+
 const detectedRecipient = computed(() => phone.value.length > 5 && selectedCode.value);
 
 const isValid = computed(() => {
-	return selectedCode.value && phone.value.length > 5 && parseFloat(sendAmount.value) > 0;
+	// require selected country code, sufficient phone, positive amount, and user found
+	return selectedCode.value && phone.value.length > 5 && parseFloat(sendAmount.value) > 0 && userFound.value;
 });
 
 const loadWallets = async () => {
@@ -326,6 +360,83 @@ const loadWallets = async () => {
 	}
 };
 
+const normalizePhoneQuery = () => {
+	// server expects phone param without + (server will prepend +)
+	// selectedCode may include '+'; strip it
+	const code = selectedCode.value ? (selectedCode.value.startsWith('+') ? selectedCode.value.slice(1) : selectedCode.value) : '';
+	return code + phone.value;
+};
+
+const onPhoneInput = (e) => {
+	phone.value = (e.target.value || '').replace(/\D+/g, '');
+}
+
+const onPhonePaste = (e) => {
+const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+const digits = text.replace(/\D+/g, '');
+// insert digits at cursor position
+const el = e.target;
+const start = el.selectionStart ?? el.value.length;
+const end = el.selectionEnd ?? el.value.length;
+const newVal = el.value.slice(0, start) + digits + el.value.slice(end);
+phone.value = newVal.replace(/\D+/g, '');
+};
+
+const searchUser = async () => {
+	// only search when we have a code and a reasonably long phone
+	if (!selectedCode.value || phone.value.length <= 5) {
+		userLookup.value = null;
+		userLookupError.value = '';
+		userLookupLoading.value = false;
+		return;
+	}
+
+	userLookupLoading.value = true;
+	userLookupError.value = '';
+	userLookup.value = null;
+
+	try {
+		const phoneQuery = normalizePhoneQuery();
+		const response = await api.get('/users/q', { params: { phone: phoneQuery } });
+		const data = response?.data?.data || null;
+		if (data) {
+			// Expecting { name: '...' }
+			userLookup.value = data;
+			// if server returned a name, prefill receiverName (but keep it disabled)
+			receiverName.value = data.name || receiverName.value;
+			userLookupError.value = '';
+		} else {
+			// not found
+			userLookup.value = null;
+			userLookupError.value = 'لا يوجد مستخدم بهذا الرقم';
+		}
+	} catch (err) {
+		const status = err?.response?.status;
+		if (status === 404) {
+			userLookup.value = null;
+			userLookupError.value = 'لا يوجد مستخدم بهذا الرقم';
+		} else {
+			// other errors — keep a generic message but don't block developer debugging
+			userLookup.value = null;
+			userLookupError.value = 'تعذر التحقق من المستخدم حالياً';
+			console.error('user search error', err);
+		}
+	} finally {
+		userLookupLoading.value = false;
+	}
+};
+
+// debounce watch for phone/code changes
+watch([selectedCode, phone], () => {
+	clearTimeout(userSearchTimer.value);
+	userLookupLoading.value = false;
+	userLookupError.value = '';
+	userSearchTimer.value = setTimeout(() => {
+		searchUser();
+	}, 450);
+});
+
+// currency conversion (unchanged)
 const convertAmount = async () => {
 	if (!sendAmount.value || parseFloat(sendAmount.value) <= 0 || !receiverCurrency.value) {
 		rate.value = 0;
@@ -377,6 +488,7 @@ const onCountryChange = (code) => {
 			currency: wallet.currency
 		});
 	}
+	// trigger searchUser via watcher
 };
 
 const goToReview = () => {
@@ -385,7 +497,7 @@ const goToReview = () => {
 	const wallet = detectedWallet.value;
 	if (wallet) {
 		transferStore.setReceiver({
-			name: receiverName.value,
+			name: userFound.value ? userLookup.value.name : receiverName.value,
 			phone: selectedCode.value + phone.value,
 			countryCode: selectedCode.value,
 			country: wallet.country,
