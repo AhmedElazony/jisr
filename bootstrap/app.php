@@ -1,10 +1,18 @@
 <?php
 
+use App\Support\Commands\MakeApiController;
+use App\Support\Commands\MakeApiRequest;
+use App\Support\Commands\MakeApiResource;
+use App\Support\Commands\MakeDomainModel;
+use App\Support\Commands\MakeDomainPolicy;
+use App\Support\Commands\MakeDomainService;
 use App\Support\Enums\ResponseMessageEnum;
+use App\Support\Http\Middlewares\HandleLocalization;
 use App\Support\Http\Responses\ApiResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\UnauthorizedException;
@@ -20,15 +28,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withCommands([
-        \App\Support\Commands\MakeApiRequest::class,
-        \App\Support\Commands\MakeApiController::class,
-        \App\Support\Commands\MakeApiResource::class,
-        \App\Support\Commands\MakeDomainModel::class,
-        \App\Support\Commands\MakeDomainPolicy::class,
-        \App\Support\Commands\MakeDomainService::class,
+        MakeApiRequest::class,
+        MakeApiController::class,
+        MakeApiResource::class,
+        MakeDomainModel::class,
+        MakeDomainPolicy::class,
+        MakeDomainService::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->append(\App\Support\Http\Middlewares\HandleLocalization::class);
+        $middleware->append(HandleLocalization::class);
+        $middleware->append(HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
