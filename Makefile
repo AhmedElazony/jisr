@@ -147,9 +147,6 @@ dev-composer-install:
 		&& docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan key:generate \
 		&& echo "$(GREEN)Application key generated!$(NC)"
 
-dev-key-generate:
-	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" app php artisan key:generate
-
 dev-npm-install:
 	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" frontend npm install
 
@@ -180,7 +177,6 @@ dev-setup:
 	@echo "$(YELLOW)Waiting for containers to be ready...$(NC)"
 	@sleep 10
 	@echo "$(GREEN)Running composer install...$(NC)"
-	@$(MAKE) dev-key-generate
 	@$(MAKE) dev-composer-install
 	@echo "$(GREEN)Running migrations...$(NC)"
 	@$(MAKE) dev-artisan-migrate
