@@ -24,8 +24,8 @@ class SendTransactionRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'receiver_phone.exists' => 'No user found with this phone number.',
-            'amount.min' => 'Amount must be greater than 0.',
+            'receiver_phone.exists' => 'لم يتم العثور على المستخدم المستلم.',
+            'amount.min' => 'يجب أن يكون المبلغ أكبر من 0.',
         ];
     }
 }

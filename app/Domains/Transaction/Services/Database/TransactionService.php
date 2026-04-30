@@ -54,9 +54,9 @@ class TransactionService implements TransactionServiceContract
 
             if ($senderPivot->pivot->balance < $totalDeducted) {
                 throw new RuntimeException(
-                    "Insufficient balance. Required: {$totalDeducted} {$senderWallet->currency} ".
-                    "(includes {$fee} {$senderWallet->currency} fee). ".
-                    "Available: {$senderPivot->pivot->balance} {$senderWallet->currency}.", 400);
+                    "لا يوجد رصيد كافي. المطلوب: {$totalDeducted} {$senderWallet->currency} ".
+                    "(يتضمن: {$fee} {$senderWallet->currency} رسوم تحويل). ".
+                    "الرصيد المتاح: {$senderPivot->pivot->balance} {$senderWallet->currency}.", 400);
             }
 
             $receiverPivot = $receiver->wallets()
