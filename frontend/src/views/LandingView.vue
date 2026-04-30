@@ -138,7 +138,7 @@
 						<div class="flex items-center justify-between">
 							<span class="text-2xl">{{ wallet.flag }}</span>
 							<span class="text-xs bg-[#EEF4F5] text-[#6B7280] px-3 py-1 rounded-full">{{ wallet.currency
-								}}</span>
+							}}</span>
 						</div>
 						<div class="mt-4 font-semibold text-[#111827]">{{ wallet.name }}</div>
 						<div class="text-sm text-[#6B7280] mt-1">{{ wallet.country }} · {{ wallet.dial_code }}</div>
@@ -173,7 +173,7 @@ const loadWallets = async () => {
 	isLoading.value = true;
 	errorMessage.value = '';
 	try {
-		const response = await axios.get(import.meta.env.VITE_API_URL + '/wallets');
+		const response = await axios.get('/api/v1/wallets');
 		const items = response?.data?.data;
 		wallets.value = Array.isArray(items) ? items : [];
 	} catch (error) {

@@ -26,6 +26,9 @@ export const useAuthStore = defineStore('auth', {
 		setToken(token) {
 			this.token = token
 		},
+		updateBalance(amount) {
+			this.user.wallet_balance = amount
+		},
 		async bootstrap() {
 			const storedUser = localStorage.getItem('user');
 			const storedToken = localStorage.getItem('token');
@@ -73,6 +76,18 @@ export const useAuthStore = defineStore('auth', {
 					localStorage.setItem('user', JSON.stringify(user));
 				}
 			} catch (error) {
+			}
+		},
+		async refreshUser() {
+			try {
+				const response = await api.get('/me');
+				const user = response?.data?.data?.user;
+				if (user) {
+					this.user = user;
+					localStorage.setItem('user', JSON.stringify(user));
+				}
+			} catch (error) {
+				// swallow errors silently for now
 			}
 		},
 		logout() {
