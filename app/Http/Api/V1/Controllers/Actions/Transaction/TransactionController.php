@@ -40,7 +40,7 @@ class TransactionController extends Controller
         } catch (RuntimeException $e) {
             return ApiResponse::error(
                 message: $e->getMessage(),
-                status: $e->getCode()
+                // status: $e->getCode()
             );
         }
     }

@@ -15,14 +15,15 @@ class TransactionSent implements ShouldBroadcastNow
 
     public function __construct(
         protected Transaction $transaction,
-		protected string $senderEmail,
-		protected string $senderName,
+        protected string $senderEmail,
+        protected string $senderName,
+        protected string $authId,
     ) {}
 
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('transaction.user.'.$this->transaction->receiver_id),
+            new PrivateChannel('transaction.user.'.$this->authId),
         ];
     }
 

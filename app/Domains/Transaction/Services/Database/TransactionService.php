@@ -107,11 +107,11 @@ class TransactionService implements TransactionServiceContract
                 'status' => 'completed',
             ]);
 
-			broadcast(
-				new TransactionSent($transaction, $sender->jisr_email, $sender->name)
-			)->toOthers();
+            broadcast(
+                new TransactionSent($transaction, $sender->jisr_email, $sender->name, auth()->id())
+            )->toOthers();
 
-			return $transaction;
+            return $transaction;
         });
     }
 
