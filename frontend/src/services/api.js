@@ -14,7 +14,13 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token') || useAuthStore().token
+    let token = localStorage.getItem('token')
+    
+    if (!token) {
+      const authStore = useAuthStore()
+      token = authStore.token
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -25,7 +31,6 @@ api.interceptors.request.use(
   }
 )
 
-// // Response interceptor
 // api.interceptors.response.use(
 //   (response) => response,
 //   (error) => {
