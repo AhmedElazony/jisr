@@ -23,7 +23,7 @@ const buildSummary = (payload) => {
 
 	return {
 		id: String(payload.id),
-		transaction_id: payload.id,
+		transaction_id: payload.reference_code,
 		amount: payload.amount,
 		sender_id: payload.sender_id,
 		sender_name: payload.sender_name || 'مستخدم',

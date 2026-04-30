@@ -34,7 +34,8 @@ class TransactionSent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id' => $this->transaction->id,
+			'id' => $this->transaction->id,
+            'reference_code' => $this->transaction->reference_code,
             'amount' => $this->transaction->receiver_amount,
             'sender_id' => $this->transaction->sender_id,
             'sender_name' => $this->senderName,
