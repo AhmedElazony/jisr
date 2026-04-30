@@ -148,10 +148,10 @@ dev-composer-install:
 		&& echo "$(GREEN)Application key generated!$(NC)"
 
 dev-npm-install:
-	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" frontend npm install
+	@cd frontend && npm install
 
 dev-npm-build:
-	@docker compose -f $(DEV_COMPOSE) run --rm -u "$(UID):$(GID)" frontend npm run build
+	@cd frontend && npm run build
 
 dev-copy-frontend:
 	@echo "$(GREEN)Copying frontend build to public/app...$(NC)"
