@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('auth', {
 			currency: '',
 			countryFlag: ''
 		},
-		token: '1|qvnVU3p500thi3VQfOTAxBibScmEwZgjF1ejMNhb7ae7b631' // Temporary token for development
+		token: '1|kFaAGcCXBF0fpDqG6Jhhxpd3JblVYR2yjo5kb07La75cf111' // Temporary token for development
 	}),
 	actions: {
 		setAuth(payload) {
