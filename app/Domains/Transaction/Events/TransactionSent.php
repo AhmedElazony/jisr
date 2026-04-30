@@ -35,7 +35,7 @@ class TransactionSent implements ShouldBroadcastNow
     {
         return [
             'id' => $this->transaction->id,
-            'amount' => $this->transaction->amount,
+            'amount' => $this->transaction->receiver_amount,
             'sender_id' => $this->transaction->sender_id,
             'sender_name' => $this->senderName,
             'sender_email' => $this->senderEmail,
