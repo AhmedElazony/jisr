@@ -108,7 +108,7 @@ class TransactionService implements TransactionServiceContract
             ]);
 
             broadcast(
-                new TransactionSent($transaction, $sender->jisr_email, $sender->name, auth()->id())
+                new TransactionSent($transaction, $sender->jisr_email, $sender->name)
             )->toOthers();
 
             return $transaction;
