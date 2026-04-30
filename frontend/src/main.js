@@ -4,6 +4,7 @@ import router from './router';
 import './style.css';
 import App from './App.vue';
 import { useAuthStore } from './stores/auth';
+import { initEcho } from './services/echo';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -13,8 +14,9 @@ app.use(router);
 
 setActivePinia(pinia);
 
-const authStore = useAuthStore(); 
+const authStore = useAuthStore();
 
 authStore.bootstrap().finally(() => {
-  app.mount('#app');
+	initEcho();
+	app.mount('#app');
 });
