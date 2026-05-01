@@ -117,8 +117,11 @@ class TransactionService implements TransactionServiceContract
 
     public function getHistory(User $user): LengthAwarePaginator
     {
-        return Transaction::where('sender_id', $user->id)
-            ->orWhere('receiver_id', $user->id)
+        return Transaction::query()
+            ->with('sender')
+            ->where(fn ($query) => $query
+                ->where('sender_id', $user->id)
+                ->orWhere('receiver_id', $user->id))
             ->orderByDesc('created_at')
             ->paginate(15);
     }
