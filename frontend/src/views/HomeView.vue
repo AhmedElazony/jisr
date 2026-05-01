@@ -141,7 +141,7 @@
 					<a href="#" class="text-sm text-[#0CAB9A] font-semibold">عرض الكل</a>
 				</div>
 				<div class="grid grid-cols-4 px-6 py-3 text-xs text-[#6B7280] bg-[#F9FAFB] border-b border-[#E5E7EB]">
-					<div>المستلم</div>
+					<div>الطرف الآخر</div>
 					<div>التاريخ</div>
 					<div>الحالة</div>
 					<div class="text-left">المبلغ</div>
@@ -221,7 +221,7 @@ const fetchTransactions = async () => {
         
         const formatted = transactions.map(tx => ({
             id: tx.reference_code,
-            name: tx.receiver_full_name,
+            name: tx.other_name,
             initials: tx.receiver_full_name.split(' ')[0].charAt(0).toUpperCase(),
             time: formatTime(tx.created_at),
             amount: tx.type == 'received' ? `+ ${tx.amount} ${tx.currency}` : `-${tx.amount} ${tx.currency}`,

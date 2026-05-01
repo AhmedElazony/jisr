@@ -12,16 +12,20 @@ class TransactionHistoryResource extends JsonResource
         $isSender = $this->sender_id === $request->user()->id;
 
         return [
-            'reference_code'     => $this->reference_code,
-            'type'               => $isSender ? 'sent' : 'received',
+            'reference_code' => $this->reference_code,
+            'type' => $isSender ? 'sent' : 'received',
+            'sender_name' => $this->sender?->name,
+			'other_name' => $this->sender_id === $request->user()->id ? $this->receiver_full_name : $this->sender?->name,
             'receiver_full_name' => $this->receiver_full_name,
-            'reason'             => $this->reason,
-            'amount'             => $isSender ? $this->sender_amount   : $this->receiver_amount,
-            'currency'           => $isSender ? $this->sender_currency : $this->receiver_currency,
-            'transaction_fee'    => $isSender ? $this->transaction_fee : null,
-            'exchange_rate'      => $this->exchange_rate,
-            'status'             => $this->status,
-            'created_at'         => $this->created_at->toDateTimeString(),
+            'sender_id' => $this->sender_id,
+            'receiver_id' => $this->receiver_id,
+            'reason' => $this->reason,
+            'amount' => $isSender ? $this->sender_amount : $this->receiver_amount,
+            'currency' => $isSender ? $this->sender_currency : $this->receiver_currency,
+            'transaction_fee' => $isSender ? $this->transaction_fee : null,
+            'exchange_rate' => $this->exchange_rate,
+            'status' => $this->status,
+            'created_at' => $this->created_at->toDateTimeString(),
         ];
     }
 }
