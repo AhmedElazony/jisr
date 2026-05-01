@@ -13,6 +13,7 @@ class TransactionHistoryResource extends JsonResource
 
         return [
             'reference_code'     => $this->reference_code,
+			'type'               => $isSender ? 'sent' : 'received',
             'sender_name'        => $this->sender?->name,
             'receiver_full_name' => $this->receiver_full_name,
             'reason'             => $this->reason,
