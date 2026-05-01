@@ -221,7 +221,7 @@ const fetchTransactions = async () => {
         
         const formatted = transactions.map(tx => ({
             id: tx.reference_code,
-            name: tx.typ == 'received' ? tx.sender_name : tx.receiver_full_name,
+            name: tx.type == 'received' ? tx.sender_name : tx.receiver_full_name,
             initials: tx.receiver_full_name.split(' ')[0].charAt(0).toUpperCase(),
             time: formatTime(tx.created_at),
             amount: tx.type == 'received' ? `+ ${tx.amount} ${tx.currency}` : `-${tx.amount} ${tx.currency}`,
